@@ -1,4 +1,4 @@
-import { Delete, Edit, Notifications } from '@mui/icons-material';
+import { Delete, Edit, Notifications, Repeat } from '@mui/icons-material';
 import {
   Box,
   FormControl,
@@ -8,7 +8,6 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-
 import { Event } from '../types';
 
 const notificationOptions = [
@@ -21,20 +20,20 @@ const notificationOptions = [
 
 interface EventListProps {
   searchTerm: string;
+  setSearchTerm: (searchTerm: string) => void;
   filteredEvents: Event[];
   notifiedEvents: string[];
-  onSearchChange: (term: string) => void;
-  onEditEvent: (event: Event) => void;
-  onDeleteEvent: (id: string) => void;
+  editEvent: (event: Event) => void;
+  deleteEvent: (eventId: string) => void;
 }
 
 export function EventList({
   searchTerm,
+  setSearchTerm,
   filteredEvents,
   notifiedEvents,
-  onSearchChange,
-  onEditEvent,
-  onDeleteEvent,
+  editEvent,
+  deleteEvent,
 }: EventListProps) {
   return (
     <Stack
@@ -49,7 +48,7 @@ export function EventList({
           size="small"
           placeholder="검색어를 입력하세요"
           value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
       </FormControl>
 
@@ -62,6 +61,7 @@ export function EventList({
               <Stack>
                 <Stack direction="row" spacing={1} alignItems="center">
                   {notifiedEvents.includes(event.id) && <Notifications color="error" />}
+                  {event.isRepeatEvent && <Repeat color="primary" />}
                   <Typography
                     fontWeight={notifiedEvents.includes(event.id) ? 'bold' : 'normal'}
                     color={notifiedEvents.includes(event.id) ? 'error' : 'inherit'}
@@ -96,10 +96,10 @@ export function EventList({
                 </Typography>
               </Stack>
               <Stack>
-                <IconButton aria-label="Edit event" onClick={() => onEditEvent(event)}>
+                <IconButton aria-label="Edit event" onClick={() => editEvent(event)}>
                   <Edit />
                 </IconButton>
-                <IconButton aria-label="Delete event" onClick={() => onDeleteEvent(event.id)}>
+                <IconButton aria-label="Delete event" onClick={() => deleteEvent(event.id)}>
                   <Delete />
                 </IconButton>
               </Stack>

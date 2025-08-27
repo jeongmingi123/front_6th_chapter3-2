@@ -1,9 +1,6 @@
-import { Notifications, ChevronLeft, ChevronRight, Loop } from '@mui/icons-material';
+import { Notifications, Repeat } from '@mui/icons-material';
 import {
   Box,
-  IconButton,
-  MenuItem,
-  Select,
   Stack,
   Table,
   TableBody,
@@ -11,10 +8,8 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Tooltip,
   Typography,
 } from '@mui/material';
-
 import { Event } from '../types';
 import {
   formatDate,
@@ -30,54 +25,18 @@ const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
 interface CalendarViewProps {
   view: 'week' | 'month';
   currentDate: Date;
-  holidays: Record<string, string>;
   filteredEvents: Event[];
   notifiedEvents: string[];
-  onNavigate: (direction: 'prev' | 'next') => void;
-  onViewChange: (view: 'week' | 'month') => void;
+  holidays: Record<string, string>;
 }
 
 export function CalendarView({
   view,
   currentDate,
-  holidays,
   filteredEvents,
   notifiedEvents,
-  onNavigate,
-  onViewChange,
+  holidays,
 }: CalendarViewProps) {
-  // 반복 일정 여부를 확인하는 함수
-  const isRepeatEvent = (event: Event) => {
-    return event.repeat.type !== 'none' && event.repeat.interval;
-  };
-
-  // 반복 일정 아이콘을 렌더링하는 함수
-  const renderRepeatIcon = (event: Event) => {
-    if (!isRepeatEvent(event)) return null;
-
-    return (
-      <Tooltip title={`${event.repeat.interval}${getRepeatTypeLabel(event.repeat.type)}마다 반복`}>
-        <Loop fontSize="small" sx={{ color: '#1976d2' }} />
-      </Tooltip>
-    );
-  };
-
-  // 반복 유형에 따른 라벨 반환
-  const getRepeatTypeLabel = (type: string) => {
-    switch (type) {
-      case 'daily':
-        return '일';
-      case 'weekly':
-        return '주';
-      case 'monthly':
-        return '월';
-      case 'yearly':
-        return '년';
-      default:
-        return '';
-    }
-  };
-
   const renderWeekView = () => {
     const weekDates = getWeekDates(currentDate);
     return (
@@ -134,7 +93,7 @@ export function CalendarView({
                           >
                             <Stack direction="row" spacing={1} alignItems="center">
                               {isNotified && <Notifications fontSize="small" />}
-                              {renderRepeatIcon(event)}
+                              {event.isRepeatEvent && <Repeat fontSize="small" color="primary" />}
                               <Typography
                                 variant="caption"
                                 noWrap
@@ -222,7 +181,9 @@ export function CalendarView({
                                 >
                                   <Stack direction="row" spacing={1} alignItems="center">
                                     {isNotified && <Notifications fontSize="small" />}
-                                    {renderRepeatIcon(event)}
+                                    {event.isRepeatEvent && (
+                                      <Repeat fontSize="small" color="primary" />
+                                    )}
                                     <Typography
                                       variant="caption"
                                       noWrap
@@ -249,33 +210,9 @@ export function CalendarView({
   };
 
   return (
-    <Stack flex={1} spacing={5}>
-      <Typography variant="h4">일정 보기</Typography>
-
-      <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center">
-        <IconButton aria-label="Previous" onClick={() => onNavigate('prev')}>
-          <ChevronLeft />
-        </IconButton>
-        <Select
-          size="small"
-          aria-label="뷰 타입 선택"
-          value={view}
-          onChange={(e) => onViewChange(e.target.value as 'week' | 'month')}
-        >
-          <MenuItem value="week" aria-label="week-option">
-            Week
-          </MenuItem>
-          <MenuItem value="month" aria-label="month-option">
-            Month
-          </MenuItem>
-        </Select>
-        <IconButton aria-label="Next" onClick={() => onNavigate('next')}>
-          <ChevronRight />
-        </IconButton>
-      </Stack>
-
+    <>
       {view === 'week' && renderWeekView()}
       {view === 'month' && renderMonthView()}
-    </Stack>
+    </>
   );
 }

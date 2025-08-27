@@ -7,24 +7,23 @@ import {
   DialogTitle,
   Typography,
 } from '@mui/material';
-
 import { Event } from '../types';
 
-interface RepeatEventDialogProps {
-  open: boolean;
-  overlappingEvents: Event[];
+interface OverlapDialogProps {
+  isOpen: boolean;
   onClose: () => void;
+  overlappingEvents: Event[];
   onContinue: () => void;
 }
 
-export function RepeatEventDialog({
-  open,
-  overlappingEvents,
+export function OverlapDialog({
+  isOpen,
   onClose,
+  overlappingEvents,
   onContinue,
-}: RepeatEventDialogProps) {
+}: OverlapDialogProps) {
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog open={isOpen} onClose={onClose}>
       <DialogTitle>일정 겹침 경고</DialogTitle>
       <DialogContent>
         <DialogContentText>

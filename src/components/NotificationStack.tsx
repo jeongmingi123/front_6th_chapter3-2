@@ -7,7 +7,9 @@ interface NotificationStackProps {
 }
 
 export function NotificationStack({ notifications, onRemoveNotification }: NotificationStackProps) {
-  if (notifications.length === 0) return null;
+  if (notifications.length === 0) {
+    return null;
+  }
 
   return (
     <Stack position="fixed" top={16} right={16} spacing={2} alignItems="flex-end">

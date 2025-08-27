@@ -12,10 +12,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { useState } from 'react';
-
-import { Event, RepeatType } from '../types';
-import { getTimeErrorMessage } from '../utils/timeValidation';
+import { EventForm as EventFormType, RepeatType } from '../types';
 
 const categories = ['업무', '개인', '가족', '기타'];
 
@@ -28,101 +25,66 @@ const notificationOptions = [
 ];
 
 interface EventFormProps {
-  editingEvent: Event | null;
-  onSubmit: (eventData: Event) => void;
-  onCancel: () => void;
+  title: string;
+  setTitle: (title: string) => void;
+  date: string;
+  setDate: (date: string) => void;
+  startTime: string;
+  endTime: string;
+  description: string;
+  setDescription: (description: string) => void;
+  location: string;
+  setLocation: (location: string) => void;
+  category: string;
+  setCategory: (category: string) => void;
+  isRepeating: boolean;
+  setIsRepeating: (isRepeating: boolean) => void;
+  repeatType: RepeatType;
+  setRepeatType: (repeatType: RepeatType) => void;
+  repeatInterval: number;
+  setRepeatInterval: (repeatInterval: number) => void;
+  repeatEndDate: string;
+  setRepeatEndDate: (repeatEndDate: string) => void;
+  notificationTime: number;
+  setNotificationTime: (notificationTime: number) => void;
+  startTimeError: string | null;
+  endTimeError: string | null;
+  editingEvent: EventFormType | null;
+  handleStartTimeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleEndTimeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  addOrUpdateEvent: () => void;
 }
 
-export function EventForm({ editingEvent, onSubmit, onCancel }: EventFormProps) {
-  const [title, setTitle] = useState(editingEvent?.title || '');
-  const [date, setDate] = useState(editingEvent?.date || '');
-  const [startTime, setStartTime] = useState(editingEvent?.startTime || '');
-  const [endTime, setEndTime] = useState(editingEvent?.endTime || '');
-  const [description, setDescription] = useState(editingEvent?.description || '');
-  const [location, setLocation] = useState(editingEvent?.location || '');
-  const [category, setCategory] = useState(editingEvent?.category || '업무');
-  const [isRepeating, setIsRepeating] = useState(editingEvent?.repeat.type !== 'none');
-  const [repeatType, setRepeatType] = useState<RepeatType>(editingEvent?.repeat.type || 'daily');
-  const [repeatInterval, setRepeatInterval] = useState(editingEvent?.repeat.interval || 1);
-  const [repeatEndDate, setRepeatEndDate] = useState(editingEvent?.repeat.endDate || '');
-  const [notificationTime, setNotificationTime] = useState(editingEvent?.notificationTime || 10);
-
-  const [startTimeError, setStartTimeError] = useState('');
-  const [endTimeError, setEndTimeError] = useState('');
-
-  const handleStartTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setStartTime(value);
-    if (endTime && value >= endTime) {
-      setStartTimeError('시작 시간은 종료 시간보다 빨라야 합니다.');
-    } else {
-      setStartTimeError('');
-    }
-  };
-
-  const handleEndTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setEndTime(value);
-    if (startTime && value <= startTime) {
-      setEndTimeError('종료 시간은 시작 시간보다 늦어야 합니다.');
-    } else {
-      setEndTimeError('');
-    }
-  };
-
-  const validateTime = () => {
-    const result = getTimeErrorMessage(startTime, endTime);
-    setStartTimeError(result.startTimeError || '');
-    setEndTimeError(result.endTimeError || '');
-  };
-
-  const handleSubmit = () => {
-    if (!title || !date || !startTime || !endTime) {
-      return false;
-    }
-
-    if (startTimeError || endTimeError) {
-      return false;
-    }
-
-    const eventData: Event = {
-      id: editingEvent?.id || '',
-      title,
-      date,
-      startTime,
-      endTime,
-      description,
-      location,
-      category,
-      repeat: {
-        type: isRepeating ? repeatType : 'none',
-        interval: repeatInterval,
-        endDate: repeatEndDate || undefined,
-      },
-      notificationTime,
-    };
-
-    onSubmit(eventData);
-    return true;
-  };
-
-  const resetForm = () => {
-    setTitle('');
-    setDate('');
-    setStartTime('');
-    setEndTime('');
-    setDescription('');
-    setLocation('');
-    setCategory('업무');
-    setIsRepeating(false);
-    setRepeatType('daily');
-    setRepeatInterval(1);
-    setRepeatEndDate('');
-    setNotificationTime(10);
-    setStartTimeError('');
-    setEndTimeError('');
-  };
-
+export function EventForm({
+  title,
+  setTitle,
+  date,
+  setDate,
+  startTime,
+  endTime,
+  description,
+  setDescription,
+  location,
+  setLocation,
+  category,
+  setCategory,
+  isRepeating,
+  setIsRepeating,
+  repeatType,
+  setRepeatType,
+  repeatInterval,
+  setRepeatInterval,
+  repeatEndDate,
+  setRepeatEndDate,
+  notificationTime,
+  setNotificationTime,
+  startTimeError,
+  endTimeError,
+  editingEvent,
+  handleStartTimeChange,
+  handleEndTimeChange,
+  addOrUpdateEvent,
+}: EventFormProps) {
   return (
     <Stack spacing={2} sx={{ width: '20%' }}>
       <Typography variant="h4">{editingEvent ? '일정 수정' : '일정 추가'}</Typography>
@@ -158,7 +120,6 @@ export function EventForm({ editingEvent, onSubmit, onCancel }: EventFormProps) 
               type="time"
               value={startTime}
               onChange={handleStartTimeChange}
-              onBlur={validateTime}
               error={!!startTimeError}
             />
           </Tooltip>
@@ -172,7 +133,6 @@ export function EventForm({ editingEvent, onSubmit, onCancel }: EventFormProps) 
               type="time"
               value={endTime}
               onChange={handleEndTimeChange}
-              onBlur={validateTime}
               error={!!endTimeError}
             />
           </Tooltip>
@@ -220,7 +180,18 @@ export function EventForm({ editingEvent, onSubmit, onCancel }: EventFormProps) 
       <FormControl>
         <FormControlLabel
           control={
-            <Checkbox checked={isRepeating} onChange={(e) => setIsRepeating(e.target.checked)} />
+            <Checkbox
+              checked={isRepeating}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setIsRepeating(checked);
+                if (checked) {
+                  setRepeatType('daily');
+                } else {
+                  setRepeatType('none');
+                }
+              }}
+            />
           }
           label="반복 일정"
         />
@@ -250,6 +221,8 @@ export function EventForm({ editingEvent, onSubmit, onCancel }: EventFormProps) 
               size="small"
               value={repeatType}
               onChange={(e) => setRepeatType(e.target.value as RepeatType)}
+              data-testid="repeat-type-select"
+              aria-label="반복 유형 선택"
             >
               <MenuItem value="daily">매일</MenuItem>
               <MenuItem value="weekly">매주</MenuItem>
@@ -266,6 +239,7 @@ export function EventForm({ editingEvent, onSubmit, onCancel }: EventFormProps) 
                 value={repeatInterval}
                 onChange={(e) => setRepeatInterval(Number(e.target.value))}
                 slotProps={{ htmlInput: { min: 1 } }}
+                inputProps={{ 'data-testid': 'repeat-interval-input' }}
               />
             </FormControl>
             <FormControl fullWidth>
@@ -275,28 +249,25 @@ export function EventForm({ editingEvent, onSubmit, onCancel }: EventFormProps) 
                 type="date"
                 value={repeatEndDate}
                 onChange={(e) => setRepeatEndDate(e.target.value)}
+                inputProps={{
+                  max: '2025-10-30',
+                  'data-testid': 'repeat-end-date-input',
+                }}
+                helperText="최대 2025-10-30까지 설정 가능"
               />
             </FormControl>
           </Stack>
         </Stack>
       )}
 
-      <Stack direction="row" spacing={2}>
-        <Button
-          data-testid="event-submit-button"
-          onClick={handleSubmit}
-          variant="contained"
-          color="primary"
-          fullWidth
-        >
-          {editingEvent ? '일정 수정' : '일정 추가'}
-        </Button>
-        {editingEvent && (
-          <Button onClick={onCancel} variant="outlined" fullWidth>
-            취소
-          </Button>
-        )}
-      </Stack>
+      <Button
+        data-testid="event-submit-button"
+        onClick={addOrUpdateEvent}
+        variant="contained"
+        color="primary"
+      >
+        {editingEvent ? '일정 수정' : '일정 추가'}
+      </Button>
     </Stack>
   );
 }
