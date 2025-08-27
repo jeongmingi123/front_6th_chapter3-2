@@ -62,7 +62,7 @@ function getNextRepeatDate(currentDate: Date, repeatType: RepeatType, interval: 
     case 'weekly':
       nextDate.setDate(nextDate.getDate() + 7 * interval);
       break;
-    case 'monthly':
+    case 'monthly': {
       // 매월 같은 날짜로 설정 (31일의 경우 월말로 조정)
       const targetDay = currentDate.getDate();
       nextDate.setMonth(nextDate.getMonth() + interval);
@@ -75,6 +75,7 @@ function getNextRepeatDate(currentDate: Date, repeatType: RepeatType, interval: 
         nextDate.setDate(targetDay);
       }
       break;
+    }
     case 'yearly':
       // 매년 같은 날짜로 설정 (윤년 2월 29일 고려)
       nextDate.setFullYear(nextDate.getFullYear() + interval);

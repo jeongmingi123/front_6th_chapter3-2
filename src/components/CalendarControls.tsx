@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
-import { IconButton, MenuItem, Select, Stack, Typography } from '@mui/material';
+import { IconButton, MenuItem, Select, Stack } from '@mui/material';
 
 interface CalendarControlsProps {
   view: 'week' | 'month';

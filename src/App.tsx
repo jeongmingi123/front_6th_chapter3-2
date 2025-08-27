@@ -2,15 +2,6 @@ import { Box, Stack, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import { useState } from 'react';
 
-import { useCalendarView } from './hooks/useCalendarView.ts';
-import { useEventForm } from './hooks/useEventForm.ts';
-import { useEventOperations } from './hooks/useEventOperations.ts';
-import { useNotifications } from './hooks/useNotifications.ts';
-import { useSearch } from './hooks/useSearch.ts';
-import { Event, EventForm } from './types';
-import { findOverlappingEvents } from './utils/eventOverlap';
-import { generateRepeatEvents } from './utils/repeatEventUtils';
-
 import {
   EventForm as EventFormComponent,
   CalendarView,
@@ -19,6 +10,14 @@ import {
   NotificationStack,
   CalendarControls,
 } from './components';
+import { useCalendarView } from './hooks/useCalendarView.ts';
+import { useEventForm } from './hooks/useEventForm.ts';
+import { useEventOperations } from './hooks/useEventOperations.ts';
+import { useNotifications } from './hooks/useNotifications.ts';
+import { useSearch } from './hooks/useSearch.ts';
+import { Event, EventForm } from './types';
+import { findOverlappingEvents } from './utils/eventOverlap';
+import { generateRepeatEvents } from './utils/repeatEventUtils';
 
 function App() {
   const {

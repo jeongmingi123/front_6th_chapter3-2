@@ -8,6 +8,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+
 import { Event } from '../types';
 
 const notificationOptions = [

@@ -1,7 +1,7 @@
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { render, screen, within } from '@testing-library/react';
-import { UserEvent, userEvent } from '@testing-library/user-event';
+import { userEvent } from '@testing-library/user-event';
 import { SnackbarProvider } from 'notistack';
 import { ReactElement } from 'react';
 
@@ -11,7 +11,6 @@ import {
   setupMockHandlerUpdating,
 } from '../__mocks__/handlersUtils';
 import App from '../App';
-import { Event, RepeatType } from '../types';
 
 const theme = createTheme();
 
@@ -27,90 +26,6 @@ const setup = (element: ReactElement) => {
     ),
     user,
   };
-};
-
-const saveRepeatingSchedule = async (
-  user: UserEvent,
-  form: {
-    title: string;
-    date: string;
-    startTime: string;
-    endTime: string;
-    location: string;
-    description: string;
-    category: string;
-    repeatType: RepeatType;
-    repeatInterval: number;
-    repeatEndDate: string;
-  }
-) => {
-  const {
-    title,
-    date,
-    startTime,
-    endTime,
-    location,
-    description,
-    category,
-    repeatType,
-    repeatInterval,
-    repeatEndDate,
-  } = form;
-
-  await user.click(screen.getAllByText('일정 추가')[0]);
-
-  await user.type(screen.getByLabelText('제목'), title);
-  await user.type(screen.getByLabelText('날짜'), date);
-  await user.type(screen.getByLabelText('시작 시간'), startTime);
-  await user.type(screen.getByLabelText('종료 시간'), endTime);
-  await user.type(screen.getByLabelText('설명'), description);
-  await user.type(screen.getByLabelText('위치'), location);
-
-  // 카테고리 선택
-  await user.click(screen.getByLabelText('카테고리'));
-  await user.click(within(screen.getByLabelText('카테고리')).getByRole('combobox'));
-  await user.click(screen.getByRole('option', { name: `${category}-option` }));
-
-  // 반복 일정 체크박스 활성화
-  await user.click(screen.getByLabelText('반복 일정'));
-
-  // 반복 유형 Select가 렌더링될 때까지 기다린 후 선택
-  await screen.findByText('반복 유형');
-
-  // 반복 유형 Select 클릭
-  const repeatTypeSelect = screen.getByLabelText('반복 유형 선택');
-  await user.click(repeatTypeSelect);
-
-  // 반복 유형 옵션 선택 (키보드 방식)
-  const keyMap: Record<RepeatType, number> = {
-    none: 0,
-    daily: 0, // 매일 (기본값, 이동 불필요)
-    weekly: 1, // 매주 (ArrowDown 1번)
-    monthly: 2, // 매월 (ArrowDown 2번)
-    yearly: 3, // 매년 (ArrowDown 3번)
-  };
-
-  const moveCount = keyMap[repeatType] || 0;
-  for (let i = 0; i < moveCount; i++) {
-    await user.keyboard('{ArrowDown}');
-  }
-  await user.keyboard('{Enter}');
-
-  // 반복 간격 설정
-  await screen.findByText('반복 간격');
-  const intervalInput = screen.getByDisplayValue('1');
-  await user.clear(intervalInput);
-  await user.type(intervalInput, repeatInterval.toString());
-
-  // 반복 종료일 설정
-  await screen.findByText('반복 종료일');
-  const endDateInputs = screen.getAllByDisplayValue('2025-10-30');
-  const endDateInput =
-    endDateInputs.find((input) => input.getAttribute('type') === 'date') || endDateInputs[0];
-  await user.clear(endDateInput);
-  await user.type(endDateInput, repeatEndDate);
-
-  await user.click(screen.getByTestId('event-submit-button'));
 };
 
 describe('반복 일정 통합 테스트', () => {

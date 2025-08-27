@@ -2,7 +2,7 @@ import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
 
 import { Event, EventForm } from '../types';
-import { generateRepeatEvents, convertRepeatEventToSingle } from '../utils/repeatEventUtils';
+import { convertRepeatEventToSingle } from '../utils/repeatEventUtils';
 
 export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -46,8 +46,6 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
       } else {
         // 새 일정 생성 시: 반복 일정이면 반복 일정들만 생성
         if (eventData.repeat.type !== 'none') {
-          const repeatEvents = generateRepeatEvents(eventData);
-
           // 반복 일정들을 한 번에 처리 (개별 저장하지 않음)
           // 이 경우에는 실제로는 아무것도 저장하지 않고,
           // App.tsx에서 반복 일정들을 직접 처리하도록 함

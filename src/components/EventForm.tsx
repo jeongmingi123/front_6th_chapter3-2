@@ -1,5 +1,4 @@
 import {
-  Box,
   Button,
   Checkbox,
   FormControl,
@@ -12,6 +11,8 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import React from 'react';
+
 import { EventForm as EventFormType, RepeatType } from '../types';
 
 const categories = ['업무', '개인', '가족', '기타'];
