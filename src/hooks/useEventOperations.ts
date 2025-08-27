@@ -2,6 +2,7 @@ import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
 
 import { Event, EventForm } from '../types';
+import { generateRepeatEvents, convertRepeatEventToSingle } from '../utils/repeatEventUtils';
 
 export const useEventOperations = (editing: boolean, onSave?: () => void) => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -21,28 +22,54 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
     }
   };
 
-  const saveEvent = async (eventData: Event | EventForm) => {
+  const saveEvent = async (eventData: Event | EventForm, skipFetchEvents = false) => {
     try {
       let response;
+
       if (editing) {
-        response = await fetch(`/api/events/${(eventData as Event).id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventData),
-        });
+        // 수정 시: 반복 일정을 단일 일정으로 변환
+        const eventToUpdate = eventData as Event;
+        if (eventToUpdate.isRepeatEvent) {
+          const singleEvent = convertRepeatEventToSingle(eventToUpdate);
+          response = await fetch(`/api/events/${eventToUpdate.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(singleEvent),
+          });
+        } else {
+          response = await fetch(`/api/events/${eventToUpdate.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(eventData),
+          });
+        }
       } else {
-        response = await fetch('/api/events', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(eventData),
-        });
+        // 새 일정 생성 시: 반복 일정이면 반복 일정들만 생성
+        if (eventData.repeat.type !== 'none') {
+          const repeatEvents = generateRepeatEvents(eventData);
+
+          // 반복 일정들을 한 번에 처리 (개별 저장하지 않음)
+          // 이 경우에는 실제로는 아무것도 저장하지 않고,
+          // App.tsx에서 반복 일정들을 직접 처리하도록 함
+          response = { ok: true } as Response;
+        } else {
+          response = await fetch('/api/events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(eventData),
+          });
+        }
       }
 
-      if (!response.ok) {
+      if (!response?.ok) {
         throw new Error('Failed to save event');
       }
 
-      await fetchEvents();
+      // skipFetchEvents가 true면 fetchEvents를 호출하지 않음
+      if (!skipFetchEvents) {
+        await fetchEvents();
+      }
+
       onSave?.();
       enqueueSnackbar(editing ? '일정이 수정되었습니다.' : '일정이 추가되었습니다.', {
         variant: 'success',
