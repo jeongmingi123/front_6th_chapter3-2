@@ -830,3 +830,315 @@ describe('시간 검증 테스트', () => {
     expect(endTimeInput.value).toBe('09:00');
   });
 });
+
+/**
+ * 편집 모드 취소 테스트
+ *
+ * 다섯 번째 시나리오: 편집 모드 취소
+ * - 일정 편집 중에 새 일정 추가 버튼을 클릭했을 때 폼이 초기 상태로 돌아가는지 확인합니다
+ * - 편집 중이던 내용이 모두 사라지는지 확인합니다
+ * - 편집 모드에서 새 일정 생성 모드로의 전환이 올바르게 작동하는지 확인합니다
+ */
+
+describe('편집 모드 취소 테스트', () => {
+  it('기본 일정 편집 중 제목 클릭 시 폼이 초기화된다', async () => {
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+
+    const testEvent = {
+      title: '편집할 기본 일정',
+      date: '2025-10-25',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '편집 취소 테스트용',
+      location: '테스트 장소',
+      category: '업무',
+    };
+
+    await saveSchedule(user, testEvent);
+
+    await waitFor(() => {
+      const eventList = within(screen.getByTestId('event-list'));
+      expect(eventList.getByText(testEvent.title)).toBeInTheDocument();
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    const editButton = eventList.getByLabelText('Edit event');
+    await user.click(editButton);
+
+    const titleInput = screen.getByLabelText('제목') as HTMLInputElement;
+    expect(titleInput.value).toBe(testEvent.title);
+
+    await user.click(screen.getByTestId('form-title'));
+
+    expect(titleInput.value).toBe('');
+
+    const dateInput = screen.getByLabelText('날짜') as HTMLInputElement;
+    expect(dateInput.value).toBe('');
+
+    const startTimeInput = screen.getByLabelText('시작 시간') as HTMLInputElement;
+    expect(startTimeInput.value).toBe('');
+
+    const endTimeInput = screen.getByLabelText('종료 시간') as HTMLInputElement;
+    expect(endTimeInput.value).toBe('');
+
+    const descriptionInput = screen.getByLabelText('설명') as HTMLInputElement;
+    expect(descriptionInput.value).toBe('');
+
+    const locationInput = screen.getByLabelText('위치') as HTMLInputElement;
+    expect(locationInput.value).toBe('');
+
+    const categorySelect = document.getElementById('category') as HTMLSelectElement;
+    expect(categorySelect.textContent).toBe('업무');
+
+    const notificationSelect = document.getElementById('notification') as HTMLSelectElement;
+    expect(notificationSelect.textContent).toBe('10분 전');
+  });
+
+  it('편집 중 필드 수정 후 제목 클릭 시 수정 내용이 모두 초기화된다', async () => {
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+
+    const testEvent = {
+      title: '수정될 일정',
+      date: '2025-10-26',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '원본 설명',
+      location: '원본 위치',
+      category: '개인',
+    };
+
+    await saveSchedule(user, testEvent);
+
+    await waitFor(() => {
+      const eventList = within(screen.getByTestId('event-list'));
+      expect(eventList.getByText(testEvent.title)).toBeInTheDocument();
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    const editButton = eventList.getByLabelText('Edit event');
+    await user.click(editButton);
+
+    const titleInput = screen.getByLabelText('제목') as HTMLInputElement;
+    const dateInput = screen.getByLabelText('날짜') as HTMLInputElement;
+    const startTimeInput = screen.getByLabelText('시작 시간') as HTMLInputElement;
+    const endTimeInput = screen.getByLabelText('종료 시간') as HTMLInputElement;
+    const descriptionInput = screen.getByLabelText('설명') as HTMLInputElement;
+    const locationInput = screen.getByLabelText('위치') as HTMLInputElement;
+
+    await user.clear(titleInput);
+    await user.type(titleInput, '수정된 제목');
+    await user.clear(dateInput);
+    await user.type(dateInput, '2025-10-27');
+    await user.clear(startTimeInput);
+    await user.type(startTimeInput, '16:00');
+    await user.clear(endTimeInput);
+    await user.type(endTimeInput, '17:00');
+    await user.clear(descriptionInput);
+    await user.type(descriptionInput, '수정된 설명');
+    await user.clear(locationInput);
+    await user.type(locationInput, '수정된 위치');
+
+    expect(titleInput.value).toBe('수정된 제목');
+    expect(dateInput.value).toBe('2025-10-27');
+    expect(startTimeInput.value).toBe('16:00');
+    expect(endTimeInput.value).toBe('17:00');
+    expect(descriptionInput.value).toBe('수정된 설명');
+    expect(locationInput.value).toBe('수정된 위치');
+
+    await user.click(screen.getByTestId('form-title'));
+
+    expect(titleInput.value).toBe('');
+    expect(dateInput.value).toBe('');
+    expect(startTimeInput.value).toBe('');
+    expect(endTimeInput.value).toBe('');
+    expect(descriptionInput.value).toBe('');
+    expect(locationInput.value).toBe('');
+
+    const categorySelect = document.getElementById('category') as HTMLSelectElement;
+    expect(categorySelect.textContent).toBe('업무');
+
+    const notificationSelect = document.getElementById('notification') as HTMLSelectElement;
+    expect(notificationSelect.textContent).toBe('10분 전');
+  });
+
+  it('알림 설정을 변경한 편집 중 제목 클릭 시 알림이 기본값으로 초기화된다', async () => {
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+
+    await user.click(screen.getAllByText('일정 추가')[0]);
+
+    const testEvent = {
+      title: '알림 테스트 일정',
+      date: '2025-10-28',
+      startTime: '12:00',
+      endTime: '13:00',
+      description: '알림 편집 테스트',
+      location: '테스트 장소',
+      category: '개인',
+    };
+
+    await user.type(screen.getByLabelText('제목'), testEvent.title);
+    await user.type(screen.getByLabelText('날짜'), testEvent.date);
+    await user.type(screen.getByLabelText('시작 시간'), testEvent.startTime);
+    await user.type(screen.getByLabelText('종료 시간'), testEvent.endTime);
+    await user.type(screen.getByLabelText('설명'), testEvent.description);
+    await user.type(screen.getByLabelText('위치'), testEvent.location);
+
+    const categorySelect = document.getElementById('category') as HTMLSelectElement;
+    await user.click(categorySelect);
+    await waitFor(() => {
+      expect(screen.getByLabelText(`${testEvent.category}-option`)).toBeInTheDocument();
+    });
+    await user.click(screen.getByLabelText(`${testEvent.category}-option`));
+
+    const notificationSelect = document.getElementById('notification') as HTMLSelectElement;
+    await user.click(notificationSelect);
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: '1시간 전' })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole('option', { name: '1시간 전' }));
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    await waitFor(() => {
+      const eventList = within(screen.getByTestId('event-list'));
+      expect(eventList.getByText(testEvent.title)).toBeInTheDocument();
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    const editButton = eventList.getByLabelText('Edit event');
+    await user.click(editButton);
+
+    const notificationSelectEdit = document.getElementById('notification') as HTMLSelectElement;
+    expect(notificationSelectEdit.textContent).toBe('1시간 전');
+
+    await user.click(notificationSelectEdit);
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: '2시간 전' })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole('option', { name: '2시간 전' }));
+
+    expect(notificationSelectEdit.textContent).toBe('2시간 전');
+
+    await user.click(screen.getByTestId('form-title'));
+
+    const notificationSelectReset = document.getElementById('notification') as HTMLSelectElement;
+    expect(notificationSelectReset.textContent).toBe('10분 전');
+  });
+
+  it('반복 일정 편집 중 제목 클릭 시 반복 설정이 초기화된다', async () => {
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+
+    await user.click(screen.getAllByText('일정 추가')[0]);
+
+    await user.type(screen.getByLabelText('제목'), '반복 일정');
+    await user.type(screen.getByLabelText('날짜'), '2025-10-29');
+    await user.type(screen.getByLabelText('시작 시간'), '15:00');
+    await user.type(screen.getByLabelText('종료 시간'), '16:00');
+
+    await user.click(screen.getByLabelText('반복 일정'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('repeat-type-select')).toBeInTheDocument();
+      expect(screen.getByTestId('repeat-end-date-input')).toBeInTheDocument();
+    });
+
+    const repeatEndDateInput = screen.getByTestId('repeat-end-date-input');
+    await user.type(repeatEndDateInput, '2025-12-31');
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    await waitFor(() => {
+      const eventList = within(screen.getByTestId('event-list'));
+      const eventTitles = eventList.getAllByText('반복 일정');
+      expect(eventTitles.length).toBeGreaterThan(0);
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    const editButton = eventList.getAllByLabelText('Edit event')[0];
+    await user.click(editButton);
+
+    const repeatCheckbox = screen.getByLabelText('반복 일정') as HTMLInputElement;
+    expect(repeatCheckbox.checked).toBe(true);
+    expect(screen.getByTestId('repeat-type-select')).toBeInTheDocument();
+    expect(screen.getByTestId('repeat-end-date-input')).toBeInTheDocument();
+
+    await user.click(screen.getByTestId('form-title'));
+
+    const repeatCheckboxReset = screen.getByLabelText('반복 일정') as HTMLInputElement;
+    expect(repeatCheckboxReset.checked).toBe(false);
+    expect(screen.queryByTestId('repeat-type-select')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('repeat-end-date-input')).not.toBeInTheDocument();
+  });
+
+  it('편집 취소 후 새 일정을 정상적으로 생성할 수 있다', async () => {
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+
+    const existingEvent = {
+      title: '기존 일정',
+      date: '2025-10-30',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '기존 일정 설명',
+      location: '기존 위치',
+      category: '업무',
+    };
+
+    await saveSchedule(user, existingEvent);
+
+    await waitFor(() => {
+      const eventList = within(screen.getByTestId('event-list'));
+      expect(eventList.getByText(existingEvent.title)).toBeInTheDocument();
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    const editButton = eventList.getByLabelText('Edit event');
+    await user.click(editButton);
+
+    await user.click(screen.getByTestId('form-title'));
+
+    const newEvent = {
+      title: '새로운 일정',
+      date: '2025-10-31',
+      startTime: '14:00',
+      endTime: '15:00',
+      description: '새 일정 설명',
+      location: '새 위치',
+      category: '개인',
+    };
+
+    await user.type(screen.getByLabelText('제목'), newEvent.title);
+    await user.type(screen.getByLabelText('날짜'), newEvent.date);
+    await user.type(screen.getByLabelText('시작 시간'), newEvent.startTime);
+    await user.type(screen.getByLabelText('종료 시간'), newEvent.endTime);
+    await user.type(screen.getByLabelText('설명'), newEvent.description);
+    await user.type(screen.getByLabelText('위치'), newEvent.location);
+
+    const categorySelect = document.getElementById('category') as HTMLSelectElement;
+    await user.click(categorySelect);
+    await waitFor(() => {
+      expect(screen.getByLabelText(`${newEvent.category}-option`)).toBeInTheDocument();
+    });
+    await user.click(screen.getByLabelText(`${newEvent.category}-option`));
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    await waitFor(() => {
+      const eventListAfter = within(screen.getByTestId('event-list'));
+      expect(eventListAfter.getByText(existingEvent.title)).toBeInTheDocument();
+      expect(eventListAfter.getByText(newEvent.title)).toBeInTheDocument();
+    });
+
+    const titleInput = screen.getByLabelText('제목') as HTMLInputElement;
+    expect(titleInput.value).toBe('');
+  });
+});
