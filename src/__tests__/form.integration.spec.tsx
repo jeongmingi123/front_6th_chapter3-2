@@ -604,28 +604,6 @@ describe('필수 필드 검증 테스트', () => {
     expect(eventItems.length).toBe(0);
   });
 
-  it('종료 시간이 시작 시간보다 빠를 때 오류가 표시되고 일정이 저장되지 않는다', async () => {
-    setupMockHandlerCreation();
-
-    const { user } = setup(<App />);
-
-    await user.click(screen.getAllByText('일정 추가')[0]);
-
-    await user.type(screen.getByLabelText('제목'), '잘못된 시간 일정');
-    await user.type(screen.getByLabelText('날짜'), '2025-10-20');
-    await user.type(screen.getByLabelText('시작 시간'), '15:00');
-    await user.type(screen.getByLabelText('종료 시간'), '14:00');
-
-    await user.click(screen.getByTestId('event-submit-button'));
-
-    await waitFor(() => {
-      expect(screen.getByText('시간 설정을 확인해주세요.')).toBeInTheDocument();
-    });
-
-    const eventList = within(screen.getByTestId('event-list'));
-    expect(() => eventList.getByText('잘못된 시간 일정')).toThrow();
-  });
-
   it('필수 필드 오류 수정 후 정상적으로 일정이 저장된다', async () => {
     setupMockHandlerCreation();
 
@@ -653,5 +631,202 @@ describe('필수 필드 검증 테스트', () => {
 
     const titleInput = screen.getByLabelText('제목') as HTMLInputElement;
     expect(titleInput.value).toBe('');
+  });
+});
+
+/**
+ * 시간 검증 테스트
+ *
+ * 네 번째 시나리오: 시간 검증
+ * - 시작 시간이 종료 시간보다 늦을 때 적절한 오류 메시지가 표시되는지 확인합니다
+ * - 시간 오류가 있을 때 일정이 저장되지 않는지 확인합니다
+ * - 다양한 시간 형식과 경계 케이스에 대한 검증을 확인합니다
+ */
+
+describe('시간 검증 테스트', () => {
+  it('시작 시간이 종료 시간보다 늦을 때 오류 메시지가 표시되고 일정이 저장되지 않는다', async () => {
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+
+    await user.click(screen.getAllByText('일정 추가')[0]);
+
+    await user.type(screen.getByLabelText('제목'), '시간 오류 테스트');
+    await user.type(screen.getByLabelText('날짜'), '2025-10-20');
+    await user.type(screen.getByLabelText('시작 시간'), '15:00');
+    await user.type(screen.getByLabelText('종료 시간'), '14:00');
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    await waitFor(() => {
+      expect(screen.getByText('시간 설정을 확인해주세요.')).toBeInTheDocument();
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(() => eventList.getByText('시간 오류 테스트')).toThrow();
+  });
+
+  it('시작 시간과 종료 시간이 같을 때 오류 메시지가 표시되고 일정이 저장되지 않는다', async () => {
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+
+    await user.click(screen.getAllByText('일정 추가')[0]);
+
+    await user.type(screen.getByLabelText('제목'), '동일 시간 테스트');
+    await user.type(screen.getByLabelText('날짜'), '2025-10-20');
+    await user.type(screen.getByLabelText('시작 시간'), '14:00');
+    await user.type(screen.getByLabelText('종료 시간'), '14:00');
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    await waitFor(() => {
+      expect(screen.getByText('시간 설정을 확인해주세요.')).toBeInTheDocument();
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(() => eventList.getByText('동일 시간 테스트')).toThrow();
+  });
+
+  it('자정을 넘어가는 시간 설정에서 오류가 발생한다', async () => {
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+
+    await user.click(screen.getAllByText('일정 추가')[0]);
+
+    await user.type(screen.getByLabelText('제목'), '자정 넘어가는 일정');
+    await user.type(screen.getByLabelText('날짜'), '2025-10-20');
+    await user.type(screen.getByLabelText('시작 시간'), '23:30');
+    await user.type(screen.getByLabelText('종료 시간'), '01:00');
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    await waitFor(() => {
+      expect(screen.getByText('시간 설정을 확인해주세요.')).toBeInTheDocument();
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(() => eventList.getByText('자정 넘어가는 일정')).toThrow();
+  });
+
+  it('1분 차이의 유효한 시간 설정은 정상적으로 저장된다', async () => {
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+
+    await user.click(screen.getAllByText('일정 추가')[0]);
+
+    await user.type(screen.getByLabelText('제목'), '1분 차이 일정');
+    await user.type(screen.getByLabelText('날짜'), '2025-10-20');
+    await user.type(screen.getByLabelText('시작 시간'), '14:00');
+    await user.type(screen.getByLabelText('종료 시간'), '14:01');
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    await waitFor(() => {
+      const eventList = within(screen.getByTestId('event-list'));
+      expect(eventList.getByText('1분 차이 일정')).toBeInTheDocument();
+    });
+
+    const titleInput = screen.getByLabelText('제목') as HTMLInputElement;
+    expect(titleInput.value).toBe('');
+  });
+
+  it('긴 시간의 유효한 일정은 정상적으로 저장된다', async () => {
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+
+    await user.click(screen.getAllByText('일정 추가')[0]);
+
+    await user.type(screen.getByLabelText('제목'), '하루 종일 일정');
+    await user.type(screen.getByLabelText('날짜'), '2025-10-20');
+    await user.type(screen.getByLabelText('시작 시간'), '09:00');
+    await user.type(screen.getByLabelText('종료 시간'), '18:00');
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    await waitFor(() => {
+      const eventList = within(screen.getByTestId('event-list'));
+      expect(eventList.getByText('하루 종일 일정')).toBeInTheDocument();
+    });
+
+    const titleInput = screen.getByLabelText('제목') as HTMLInputElement;
+    expect(titleInput.value).toBe('');
+  });
+
+  it('시간 오류 수정 후 정상적으로 일정이 저장된다', async () => {
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+
+    await user.click(screen.getAllByText('일정 추가')[0]);
+
+    await user.type(screen.getByLabelText('제목'), '시간 수정 테스트');
+    await user.type(screen.getByLabelText('날짜'), '2025-10-20');
+    await user.type(screen.getByLabelText('시작 시간'), '16:00');
+    await user.type(screen.getByLabelText('종료 시간'), '15:00');
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    await waitFor(() => {
+      expect(screen.getByText('시간 설정을 확인해주세요.')).toBeInTheDocument();
+    });
+
+    const endTimeInput = screen.getByLabelText('종료 시간') as HTMLInputElement;
+    await user.clear(endTimeInput);
+    await user.type(endTimeInput, '17:00');
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    await waitFor(() => {
+      const eventList = within(screen.getByTestId('event-list'));
+      expect(eventList.getByText('시간 수정 테스트')).toBeInTheDocument();
+    });
+
+    const titleInput = screen.getByLabelText('제목') as HTMLInputElement;
+    expect(titleInput.value).toBe('');
+  });
+
+  it('편집 모드에서 시간 오류가 발생하면 적절한 메시지가 표시된다', async () => {
+    setupMockHandlerCreation();
+
+    const { user } = setup(<App />);
+
+    const testEvent = {
+      title: '편집할 일정',
+      date: '2025-10-20',
+      startTime: '10:00',
+      endTime: '11:00',
+      description: '편집 테스트용',
+      location: '테스트 장소',
+      category: '업무',
+    };
+
+    await saveSchedule(user, testEvent);
+
+    await waitFor(() => {
+      const eventList = within(screen.getByTestId('event-list'));
+      expect(eventList.getByText(testEvent.title)).toBeInTheDocument();
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    const editButton = eventList.getByLabelText('Edit event');
+    await user.click(editButton);
+
+    const endTimeInput = screen.getByLabelText('종료 시간') as HTMLInputElement;
+    await user.clear(endTimeInput);
+    await user.type(endTimeInput, '09:00');
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    await waitFor(() => {
+      expect(screen.getByText('시간 설정을 확인해주세요.')).toBeInTheDocument();
+    });
+
+    const startTimeInput = screen.getByLabelText('시작 시간') as HTMLInputElement;
+    expect(startTimeInput.value).toBe(testEvent.startTime);
+    expect(endTimeInput.value).toBe('09:00');
   });
 });
