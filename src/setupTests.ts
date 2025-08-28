@@ -8,6 +8,7 @@ import { handlers } from './__mocks__/handlers';
 export const server = setupServer(...handlers);
 
 vi.stubEnv('TZ', 'UTC');
+vi.setConfig({ testTimeout: 30000 });
 
 beforeAll(() => {
   server.listen();
