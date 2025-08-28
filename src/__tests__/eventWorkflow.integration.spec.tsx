@@ -57,7 +57,7 @@ const saveSchedule = async (
  */
 
 /*
- * 두번째 시나리오 : 여러 알림 동시 처리
+ * 두번째 시나리오: 여러 알림 동시 처리
  * 중복 방지: 알림이 정확히 하나만 표시됨
  * 지속성 확인: 시간이 더 진행되어도 중복 생성되지 않음
  * 알림 닫기: X 버튼으로 알림 제거 가능
@@ -139,7 +139,7 @@ describe('기본 알림 워크플로우', () => {
 
     expect(screen.queryByText('10분 후 중요한 회의 일정이 시작됩니다.')).not.toBeInTheDocument();
 
-    // 세 번째 시나리오: 알림 자동 만료
+    // 세 번째 시나리오: 알림 자동 만료
 
     const pastEventTime = new Date('2025-10-15 08:00:00'); // 이미 지난 시간
     const currentTimePast = new Date(pastEventTime.getTime() + 5 * 60 * 1000); // 5분 후
