@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 
 import { Event } from '../types';
 import { createNotificationMessage, getUpcomingEvents } from '../utils/notificationUtils';
@@ -6,21 +6,29 @@ import { createNotificationMessage, getUpcomingEvents } from '../utils/notificat
 export const useNotifications = (events: Event[]) => {
   const [notifications, setNotifications] = useState<{ id: string; message: string }[]>([]);
   const [notifiedEvents, setNotifiedEvents] = useState<string[]>([]);
+  const notifiedEventsRef = useRef<string[]>([]);
+
+  // notifiedEvents를 ref에도 동기화
+  useEffect(() => {
+    notifiedEventsRef.current = notifiedEvents;
+  }, [notifiedEvents]);
 
   const checkUpcomingEvents = useCallback(() => {
     const now = new Date();
-    const upcomingEvents = getUpcomingEvents(events, now, notifiedEvents);
+    const upcomingEvents = getUpcomingEvents(events, now, notifiedEventsRef.current);
 
-    setNotifications((prev) => [
-      ...prev,
-      ...upcomingEvents.map((event) => ({
-        id: event.id,
-        message: createNotificationMessage(event),
-      })),
-    ]);
+    if (upcomingEvents.length > 0) {
+      setNotifications((prev) => [
+        ...prev,
+        ...upcomingEvents.map((event) => ({
+          id: event.id,
+          message: createNotificationMessage(event),
+        })),
+      ]);
 
-    setNotifiedEvents((prev) => [...prev, ...upcomingEvents.map(({ id }) => id)]);
-  }, [events, notifiedEvents]);
+      setNotifiedEvents((prev) => [...prev, ...upcomingEvents.map(({ id }) => id)]);
+    }
+  }, [events]); // notifiedEvents 의존성 제거
 
   const removeNotification = (index: number) => {
     setNotifications((prev) => prev.filter((_, i) => i !== index));

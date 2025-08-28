@@ -31,7 +31,15 @@ const saveSchedule = async (
 ) => {
   const { title, date, startTime, endTime, location, description, category } = form;
 
+  await waitFor(() => {
+    expect(screen.getAllByText('일정 추가')[0]).toBeInTheDocument();
+  });
+
   await user.click(screen.getAllByText('일정 추가')[0]);
+
+  await waitFor(() => {
+    expect(screen.getByLabelText('제목')).toBeInTheDocument();
+  });
 
   await user.type(screen.getByLabelText('제목'), title);
   await user.type(screen.getByLabelText('날짜'), date);
@@ -39,11 +47,26 @@ const saveSchedule = async (
   await user.type(screen.getByLabelText('종료 시간'), endTime);
   await user.type(screen.getByLabelText('설명'), description);
   await user.type(screen.getByLabelText('위치'), location);
+
+  await waitFor(() => {
+    expect(screen.getByLabelText('카테고리')).toBeInTheDocument();
+  });
+
   await user.click(screen.getByLabelText('카테고리'));
   await user.click(within(screen.getByLabelText('카테고리')).getByRole('combobox'));
+
+  await waitFor(() => {
+    expect(screen.getByRole('option', { name: `${category}-option` })).toBeInTheDocument();
+  });
+
   await user.click(screen.getByRole('option', { name: `${category}-option` }));
 
   await user.click(screen.getByTestId('event-submit-button'));
+
+  await waitFor(() => {
+    const notifications = screen.getAllByText('일정이 추가되었습니다.');
+    expect(notifications.length).toBeGreaterThan(0);
+  });
 };
 
 /**

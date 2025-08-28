@@ -32,7 +32,15 @@ const saveSchedule = async (
 ) => {
   const { title, date, startTime, endTime, location, description, category } = form;
 
+  await waitFor(() => {
+    expect(screen.getByTestId('event-submit-button')).toBeInTheDocument();
+  });
+
   await user.click(screen.getByTestId('event-submit-button'));
+
+  await waitFor(() => {
+    expect(screen.getByLabelText('제목')).toBeInTheDocument();
+  });
 
   await user.type(screen.getByLabelText('제목'), title);
   await user.type(screen.getByLabelText('날짜'), date);
@@ -40,11 +48,25 @@ const saveSchedule = async (
   await user.type(screen.getByLabelText('종료 시간'), endTime);
   await user.type(screen.getByLabelText('설명'), description);
   await user.type(screen.getByLabelText('위치'), location);
+
+  await waitFor(() => {
+    expect(screen.getByLabelText('카테고리')).toBeInTheDocument();
+  });
+
   await user.click(screen.getByLabelText('카테고리'));
   await user.click(within(screen.getByLabelText('카테고리')).getByRole('combobox'));
+
+  await waitFor(() => {
+    expect(screen.getByRole('option', { name: `${category}-option` })).toBeInTheDocument();
+  });
+
   await user.click(screen.getByRole('option', { name: `${category}-option` }));
 
   await user.click(screen.getByTestId('event-submit-button'));
+
+  await waitFor(() => {
+    expect(screen.getByText('일정이 추가되었습니다.')).toBeInTheDocument();
+  });
 };
 
 /**
@@ -105,7 +127,8 @@ describe('기본 알림 워크플로우', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('일정이 추가되었습니다.')).toBeInTheDocument();
+      const notifications = screen.getAllByText('일정이 추가되었습니다.');
+      expect(notifications.length).toBeGreaterThan(0);
     });
 
     expect(screen.queryByText(/10분 후.*중요한 회의.*일정이 시작됩니다/)).not.toBeInTheDocument();
@@ -156,7 +179,8 @@ describe('기본 알림 워크플로우', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('일정이 추가되었습니다.')).toBeInTheDocument();
+      const notifications = screen.getAllByText('일정이 추가되었습니다.');
+      expect(notifications.length).toBeGreaterThan(0);
     });
 
     expect(screen.queryByText(/10분 후.*지난 미팅.*일정이 시작됩니다/)).not.toBeInTheDocument();
