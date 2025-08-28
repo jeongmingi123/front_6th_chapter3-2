@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import React from 'react';
 
-import { EventForm as EventFormType, RepeatType } from '../types';
+import { Event, RepeatType } from '../types';
 
 const categories = ['업무', '개인', '가족', '기타'];
 
@@ -50,10 +50,12 @@ interface EventFormProps {
   setNotificationTime: (notificationTime: number) => void;
   startTimeError: string | null;
   endTimeError: string | null;
-  editingEvent: EventFormType | null;
+  editingEvent: Event | null;
   handleStartTimeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleEndTimeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   addOrUpdateEvent: () => void;
+  resetForm: () => void;
+  setEditingEvent: (event: Event | null) => void;
 }
 
 export function EventForm({
@@ -85,10 +87,26 @@ export function EventForm({
   handleStartTimeChange,
   handleEndTimeChange,
   addOrUpdateEvent,
+  resetForm,
+  setEditingEvent,
 }: EventFormProps) {
+  const handleTitleClick = () => {
+    if (editingEvent) {
+      resetForm();
+      setEditingEvent(null);
+    }
+  };
+
   return (
     <Stack spacing={2} sx={{ width: '20%' }}>
-      <Typography variant="h4">{editingEvent ? '일정 수정' : '일정 추가'}</Typography>
+      <Typography
+        variant="h4"
+        onClick={handleTitleClick}
+        sx={{ cursor: editingEvent ? 'pointer' : 'default' }}
+        data-testid="form-title"
+      >
+        {editingEvent ? '일정 수정 ✕' : '일정 추가'}
+      </Typography>
 
       <FormControl fullWidth>
         <FormLabel htmlFor="title">제목</FormLabel>
