@@ -168,6 +168,8 @@ function App() {
           handleStartTimeChange={handleStartTimeChange}
           handleEndTimeChange={handleEndTimeChange}
           addOrUpdateEvent={addOrUpdateEvent}
+          resetForm={resetForm}
+          setEditingEvent={setEditingEvent}
         />
 
         <Stack flex={1} spacing={5}>
